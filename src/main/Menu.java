@@ -33,7 +33,7 @@ public class Menu {
 					   "|   Juyoung's queries section:                               |\n"+
 					   "|                                                            |\n"+
 					   "| type anything else to terminate the execution              |\n"+
-					   "--------------------------------------------------------------\n";;
+					   "--------------------------------------------------------------\n";
 		
 		System.out.println(s);
 		
