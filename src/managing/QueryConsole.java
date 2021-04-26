@@ -1,11 +1,19 @@
-package main;
-import java.security.GeneralSecurityException;
+package managing;
 import java.sql.Connection;
 import java.sql.DriverManager;
 import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.sql.Statement;
 
+import exceptions.AlreadyActiveQuery;
+import exceptions.NoQueryToClose;
+
+/**
+ * Class created to retrieve the queries from the database
+ * 
+ * @authors Iker, Davy, Juyoung
+ *
+ */
 public class QueryConsole {
 	
 	// JDBC driver name and database URL
@@ -13,13 +21,35 @@ public class QueryConsole {
     private static final String DB_URL = "jdbc:mysql://dif-mysql.ehu.es:3306/";
 
     // Database credentials
-    private String user;
-    private String pass;
-    private String dBase;
-    private Connection conn = null;
-    private Statement stmt = null;
-    private ResultSet rs=null;
     
+    /**
+     * Parameter for the user of the mysql server
+     */
+    private String user;
+    /**
+     * Parameter for the password of the mysql user
+     */
+    private String pass;
+    /**
+     * Parameter that represents the name of the database to work with
+     */
+    private String dBase;
+    
+    /**
+     * Temporal parameter of the database connector
+     */
+    private Connection conn = null;
+    /**
+     * Temporal parameter of the query statement
+     */
+    private Statement stmt = null;
+    /**
+     * Temporal parameter of the result set
+     */
+    private ResultSet rs=null;
+    /**
+     * Parameter for the number of current active queries. NOTE: It cannot be more than one
+     */
     private int numQueries;
     
     //Constructor:
@@ -36,12 +66,12 @@ public class QueryConsole {
     
     //Methods:
 		    
-	public ResultSet performQuery(String query) {
+	public ResultSet performQuery(String query) throws AlreadyActiveQuery{
 		
 		if(numQueries==0) {
 			numQueries++;
 		}else {
-			// TODO throw new illegalException();
+			throw new AlreadyActiveQuery();
 		}
 		
 		try{
@@ -57,9 +87,13 @@ public class QueryConsole {
 		      stmt = conn.createStatement();
 		      rs = stmt.executeQuery(query);
 		}
-		catch(Exception e) {
+		catch(SQLException | ClassNotFoundException e) {
 			System.out.println("Something wrong with the query... Aborting.");
-			endQuery();
+			try {
+				endQuery();
+			} catch (NoQueryToClose e1) {
+				//Impossible
+			}
 		}
 		      
 		      //STEP 5: Extract data from result set
@@ -79,18 +113,22 @@ public class QueryConsole {
 	}
 
 	
-	public void endQuery() {
+	public void endQuery() throws NoQueryToClose{
 		
 		if(numQueries==1)	
 			numQueries--;
-		else // TODO throw new noQuery (asegurar no hacer nullcheck)
+		else throw new NoQueryToClose();
 		
-		try {// TODO nullcheck de todos
-			rs.close();
-			stmt.close();
-			conn.close();
-		} catch (Exception e) {
-			System.out.println("F");
+		try {
+			
+			if(rs!=null)	rs.close();
+			
+			if(stmt!=null)	stmt.close();
+			
+			if(conn!=null)	conn.close();
+				
+		} catch (SQLException e) {
+			System.out.println("Failed to close");
 		}
 	}
 	
