@@ -1,9 +1,12 @@
 package managing;
 import java.sql.Connection;
 import java.sql.DriverManager;
+import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.sql.Statement;
+import java.util.Iterator;
+import java.util.List;
 
 import exceptions.AlreadyActiveQuery;
 import exceptions.NoQueryToClose;
@@ -44,6 +47,10 @@ public class QueryConsole {
      */
     private Statement stmt = null;
     /**
+     * Temporal parameter of the query statement
+     */
+    private PreparedStatement prepStmt =null;
+    /**
      * Temporal parameter of the result set
      */
     private ResultSet rs=null;
@@ -66,6 +73,13 @@ public class QueryConsole {
     
     //Methods:
 		    
+    /**
+     * Method to perform a query
+     * 
+     * @param query the sql code to perform a query
+     * @return the set of the query
+     * @throws AlreadyActiveQuery if there already is an active query
+     */
 	public ResultSet performQuery(String query) throws AlreadyActiveQuery{
 		
 		if(numQueries==0) {
@@ -112,6 +126,74 @@ public class QueryConsole {
 
 	}
 
+	/**
+	 * Method to perform a query using parameters
+	 * @param query the sql code for the query
+	 * @param list of elements to introduce in the query
+	 * @return the set of the query
+	 * @throws AlreadyActiveQuery if there is a not closed query
+	 */
+	public ResultSet performQueryWithParams(String query, List<Object> list) throws AlreadyActiveQuery{
+		
+		if(numQueries==0) {
+			numQueries++;
+		}else {
+			throw new AlreadyActiveQuery();
+		}
+		
+		try{
+		      //STEP 2: Register JDBC driver
+		      Class.forName(JDBC_DRIVER);
+
+		      //STEP 3: Open a connection
+		      System.out.println("Connecting to database...");
+		      conn = DriverManager.getConnection(DB_URL+dBase,user,pass);
+
+		      //STEP 4: Execute a query
+		      System.out.println("Creating statement...");
+		      prepStmt=conn.prepareStatement(query);
+		      Iterator<Object> it=list.iterator();
+		      Object o;
+		      for(int i=1;it.hasNext();i++) {
+		    	  o=it.next();
+		    	  if(o instanceof String) {
+		    		  prepStmt.setString(i, (String)o);
+		    	  }else if (o instanceof Integer) {
+		    		  prepStmt.setInt(i, (int)o);
+		    	  }else {
+		    		  prepStmt.setObject(i, o);
+		    		  System.out.println(o.getClass()+" has been introduced with setObject method, check its correctness");
+		    	  }
+		      }
+		      
+		      rs = prepStmt.executeQuery();
+		}
+		catch(SQLException | ClassNotFoundException e) {
+			System.out.println("Something wrong with the query... Aborting.");
+			try {
+				endQuery();
+			} catch (NoQueryToClose e1) {
+				//Impossible
+			}
+		}
+		      
+		      //STEP 5: Extract data from result set
+		      /*while(rs.next()){
+		         //Retrieve by column name
+		         int ssn  = rs.getInt("e.Ssn");
+		         String fName = rs.getString("e.Fname");
+		         
+		         //Display values
+		         System.out.print("Ssn: " + ssn);
+		         System.out.print(", First Name: " + fName);
+		         System.out.println("");
+		    	}*/
+		  
+		   return rs;
+
+	}
+
+	
 	
 	public void endQuery() throws NoQueryToClose{
 		
@@ -124,6 +206,8 @@ public class QueryConsole {
 			if(rs!=null)	rs.close();
 			
 			if(stmt!=null)	stmt.close();
+			
+			if(prepStmt!=null)	prepStmt.close();
 			
 			if(conn!=null)	conn.close();
 				
