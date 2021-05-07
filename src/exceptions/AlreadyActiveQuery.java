@@ -5,7 +5,7 @@ package exceptions;
  *
  */
 public class AlreadyActiveQuery extends Exception {
-	//serial id
+	
 	private static final long serialVersionUID = 1L;
 
 	public AlreadyActiveQuery() {

@@ -12,7 +12,12 @@ public class Testing {
 
 	public static void main(String[] args) {
 
-		QueryConsole qc = new QueryConsole("DBDI26", "Panasonic_123", "dbdi26");
+		QueryConsole qc = null;
+		try {
+			qc = new QueryConsole("DBDI26", "Panasonic_123", "dbdi26");
+		} catch (SQLException e2) {
+			System.out.println("Connect the vpn...");
+		}
 
 		ResultSet rs;
 

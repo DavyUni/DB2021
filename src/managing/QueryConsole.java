@@ -64,7 +64,7 @@ public class QueryConsole {
 
 	// Constructor:
 
-	public QueryConsole(String usr, String pw, String dataBase) {
+	public QueryConsole(String usr, String pw, String dataBase) throws SQLException {
 		super();
 		this.user = usr;
 		this.pass = pw;
@@ -83,10 +83,7 @@ public class QueryConsole {
 
 		} catch (ClassNotFoundException e) {
 			// Won't happen!
-		} catch (SQLException e) {
-			//
 		}
-
 	}
 
 	// Methods:
