@@ -37,7 +37,6 @@ public class Menu {
 			+ "--------------------------------------------------------------\n";
 
 	public static void main(String[] args) {
-
 		Scanner sn = new Scanner(System.in);
 		String input;
 
@@ -89,9 +88,10 @@ public class Menu {
 
 		printNicely("Insert the username of your mysql account:\n");
 		String user = sn.nextLine();
-
 		printNicely("Now, insert your password of the same mysql account:\n");
+
 		String pwd = sn.nextLine();
+		;
 
 		printNicely("Before going on we remind you to connect the vpn");
 		try {

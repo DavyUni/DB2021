@@ -5,11 +5,13 @@ import java.sql.DriverManager;
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.sql.SQLException;
+import java.sql.Savepoint;
 import java.sql.Statement;
 import java.util.Iterator;
 import java.util.List;
 
 import exceptions.AlreadyActiveQuery;
+import exceptions.IllegalUpdateException;
 import exceptions.NoQueryToClose;
 import exceptions.UnsuccessfulUpdate;
 
@@ -97,13 +99,16 @@ public class QueryConsole {
 	 * @return the set of the query
 	 * @throws AlreadyActiveQuery if there already is an active query
 	 */
-	public ResultSet performQuery(String query) throws AlreadyActiveQuery {
+	public ResultSet performQuery(String query) throws AlreadyActiveQuery, IllegalUpdateException {
 
 		if (numQueries == 0) {
 			numQueries++;
 		} else {
 			throw new AlreadyActiveQuery();
 		}
+
+		if (query.split(" ")[0].equalsIgnoreCase("update"))
+			throw new IllegalUpdateException();
 
 		try {
 			// STEP 4: Execute a query
@@ -140,7 +145,7 @@ public class QueryConsole {
 	 * @return the set of the query
 	 * @throws AlreadyActiveQuery if there is a not closed query
 	 */
-	public ResultSet performQuery(String query, List<Object> list) throws AlreadyActiveQuery {
+	public ResultSet performQuery(String query, List<Object> list) throws AlreadyActiveQuery, IllegalUpdateException {
 
 		if (numQueries == 0) {
 			numQueries++;
@@ -148,13 +153,10 @@ public class QueryConsole {
 			throw new AlreadyActiveQuery();
 		}
 
-		try {
-			// STEP 2: Register JDBC driver
-			Class.forName(JDBC_DRIVER);
+		if (query.split(" ")[0].equalsIgnoreCase("update"))
+			throw new IllegalUpdateException();
 
-			// STEP 3: Open a connection
-			System.out.println("Connecting to database...");
-			conn = DriverManager.getConnection(DB_URL + dBase, user, pass);
+		try {
 
 			// STEP 4: Execute a query
 			System.out.println("Creating statement...");
@@ -175,7 +177,7 @@ public class QueryConsole {
 			}
 
 			rs = prepStmt.executeQuery();
-		} catch (SQLException | ClassNotFoundException e) {
+		} catch (SQLException e) {
 			System.out.println("Something wrong with the query... Aborting.");
 			try {
 				endQuery();
@@ -197,18 +199,123 @@ public class QueryConsole {
 
 	}
 
-	public boolean updateTypeQuery(String update) throws AlreadyActiveQuery, UnsuccessfulUpdate {
-		// savepoint
+	public void updateTypeQuery(String update) throws AlreadyActiveQuery, UnsuccessfulUpdate {
 
-		// commit or rollback
-		return false;
+		if (numQueries == 0) {
+			numQueries++;
+		} else {
+			throw new AlreadyActiveQuery();
+		}
+		Savepoint backup = null;
+		// savepoint
+		try {
+			backup = conn.setSavepoint();
+
+			System.out.println("Creating update statement...");
+			stmt = conn.createStatement();
+			rs = stmt.executeQuery(update);
+
+			// commit or rollback
+			conn.commit();
+		} catch (SQLException e) {
+			// savepoint
+			try {
+				endQuery();
+			} catch (NoQueryToClose e2) {
+				// Will not happen
+			}
+			try {
+				conn.rollback(backup);
+				System.err.println(
+						"There has been an irreparable problem with the update, the state of the database has been rolled back!");
+			} catch (SQLException e1) {
+				System.err.println("The rollback has failed!");
+			}
+
+		}
+
 	}
 
-	public boolean updateTypeQuery(String update, List<Object> list) throws AlreadyActiveQuery, UnsuccessfulUpdate {
+	public int updateTypeQuery(String update, List<Object> list, int numTuples)
+			throws AlreadyActiveQuery, UnsuccessfulUpdate, IllegalUpdateException {
+
+		if (numQueries == 0) {
+			numQueries++;
+		} else {
+			throw new AlreadyActiveQuery();
+		}
+
+		if (list.size() % numTuples != 0) {
+			throw new IllegalUpdateException(
+					"You need to give a list with a number of elements compatible with the number of tuples");
+		}
+
+		int params = list.size() / numTuples;
+		Savepoint backup = null;
 		// savepoint
 
+		try {
+			prepStmt = conn.prepareStatement(update);
+		} catch (SQLException e1) {
+			return -1;
+		}
+
+		// STEP 4: Execute the queries
+		int success = 0;
+
+		Iterator<Object> it = list.iterator();
+		Object o;
+		for (int i = 1; i < numTuples + 1; i++) {
+			System.out.println("Preparing update query " + i + "...");
+			try {
+				backup = conn.setSavepoint();
+				for (int j = 1; j < params + 1; j++) {// no need to use it.hasNext() because we know the size of the
+														// list
+					o = it.next();
+					if (o instanceof String) {
+
+						prepStmt.setString(j, (String) o);
+
+					} else if (o instanceof Integer) {
+						prepStmt.setInt(j, (int) o);
+					} else {
+						prepStmt.setObject(j, o);
+						System.out.println(
+								o.getClass() + " has been introduced with setObject method, check its correctness");
+					}
+				}
+
+				rs = prepStmt.executeQuery();
+
+				conn.commit();
+				success++;
+			} catch (SQLException e) {
+				System.err.println("update " + i + " has failed, rollback");
+				try {
+					endQuery();
+				} catch (NoQueryToClose e2) {
+					// Will not happen
+				}
+				try {
+					conn.rollback(backup);
+				} catch (SQLException e1) {
+					System.err.println("The rollback has failed!");
+				}
+			}
+		}
+
+		return success;
+		/*
+		 * 
+		 * for (int j = 1; it.hasNext(); j++) { o = it.next(); if (o instanceof String)
+		 * { prepStmt.setString(j, (String) o); } else if (o instanceof Integer) {
+		 * prepStmt.setInt(j, (int) o); } else { prepStmt.setObject(j, o);
+		 * System.out.println(o.getClass() +
+		 * " has been introduced with setObject method, check its correctness"); } }
+		 */
+
 		// commit or rollback
-		return false;
+
 	}
 
 	public void endQuery() throws NoQueryToClose {

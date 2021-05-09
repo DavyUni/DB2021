@@ -23,6 +23,9 @@ public class Testing {
 
 		try {
 
+			// rs = qc.performQuery("Update Ssn From employee where
+			// Ssn=123456789");//checking the exception
+
 			rs = qc.performQuery("SELECT Ssn FROM employee");
 
 			try {
