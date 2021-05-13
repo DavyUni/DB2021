@@ -1,6 +1,6 @@
 package exceptions;
 
-public class IllegalUpdateException extends RuntimeException {
+public class IllegalUpdateException extends IllegalQueryException {
 
 	/**
 	 * 

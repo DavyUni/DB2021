@@ -3,23 +3,30 @@ package main;
 import java.sql.Date;
 import java.sql.ResultSet;
 import java.sql.SQLException;
+import java.util.LinkedList;
 import java.util.Scanner;
 
 import credentials.Credentials;
 import exceptions.AlreadyActiveQuery;
+import exceptions.IllegalQueryException;
 import exceptions.IllegalUpdateException;
 import exceptions.NoQueryToClose;
 import managing.QueryConsole;
 
 /**
+ * Class to perform specific queries
  * 
  * @author Iker, Davy, Juyoung
  *
  */
 public class Menu {
-
+	/**
+	 * parameter of the object to perform queries
+	 */
 	private static QueryConsole qmaker;
-
+	/**
+	 * string of the menu for setting the query maker
+	 */
 	private static String s = "--------------------------------------------------------------\n"
 			+ "|                      Select a choice:                      |\n"
 			+ "|------------------------------------------------------------|\n"
@@ -27,13 +34,16 @@ public class Menu {
 			+ "| type 2 to introduce your own account and DataBase          |\n"
 			+ "| type anything else to terminate the execution              |\n"
 			+ "--------------------------------------------------------------\n";
+	/**
+	 * string of the menu to select a query
+	 */
 	private static String selMenu = "--------------------------------------------------------------\n"
 			+ "|                      Select a choice:                      |\n"
 			+ "|------------------------------------------------------------|\n"
 			+ "|   Iker's queries section:                                  |\n"
 			+ "|                                                            |\n"
-			+ "|   type 1 to: Retrieve the employee info, trip and guide of |\n"
-			+ "|   all the employees that have been on a trip where the     |\n"
+			+ "|   type 1 to: Retrieve the employee info, trip and guide    |\n"
+			+ "|   of all the employees that have been on a trip where the  |\n"
 			+ "|   guide either speaks 2 or more languages or has gone to   |\n"
 			+ "|   all trips.                                               |\n"
 			+ "|                                                            |\n"
@@ -46,9 +56,15 @@ public class Menu {
 			+ "|   are in the same city as the departments that only have   |\n"
 			+ "|   workers of one single sex.                               |\n"
 			+ "|                                                            |\n"
-			+ "|   type 4 to:                                               |\n"
+			+ "|   type 4 to: Insert into the database some new works_on    |\n"
+			+ "|   relationships. Be careful and introduce existing social  |\n"
+			+ "|   security numbers and proyect numbers because they are    |\n"
+			+ "|   foreign keys.                                            |\n"
 			+ "|                                                            |\n"
-			+ "|   type 5 to:                                               |\n"
+			+ "|   type 5 to: Update the social security number of some     |\n"
+			+ "|   employees. Remember that these updates will have side    |\n"
+			+ "|   effects in other tables that use this number as foreign  |\n"
+			+ "|   key.                                                     |\n"
 			+ "|                                                            |\n"
 			+ "|   Davy's queries section:                                  |\n"
 			+ "|                                                            |\n"
@@ -80,6 +96,11 @@ public class Menu {
 			+ "| type anything else to terminate the execution              |\n"
 			+ "--------------------------------------------------------------\n";
 
+	/**
+	 * main method to perform the menu
+	 * 
+	 * @param args
+	 */
 	public static void main(String[] args) {
 		Scanner sn = new Scanner(System.in);
 		String input;
@@ -106,6 +127,14 @@ public class Menu {
 				processQ3();
 				break;
 
+			case "4":
+				processQ4(sn);
+				break;
+
+			case "5":
+				processQ5(sn);
+				break;
+
 			case "16":
 				stay = setQmaker(sn);
 				break;
@@ -117,11 +146,15 @@ public class Menu {
 			}
 
 		}
-
+		if (qmaker != null)
+			qmaker.endConnection();
 		sn.close();
 
 	}
 
+	/**
+	 * method for the query of choice 1
+	 */
 	private static void processQ1() {
 		String query = "SELECT e.Ssn, e.Lname, e.Fname, htc.TripTo, htc.DepartureDate, tri.GuideId, tou.guidename FROM employee as e INNER join employee_customer as ec on ec.Emp_id=e.Ssn INNER JOIN hotel_trip_customer as htc ON htc.CustomerId=ec.Cust_Id INNER JOIN trip as tri ON tri.TripTo=htc.TripTo and tri.DepartureDate=htc.DepartureDate INNER JOIN tourguide as tou ON tou.GuideId=tri.GuideId WHERE tri.GuideId IN (SELECT t2.GuideId FROM tourguide as t2 INNER JOIN languages as l ON l.GuideId=t2.GuideId GROUP BY t2.GuideId HAVING COUNT(*)>=2 UNION SELECT t3.GuideId FROM trip as t3 WHERE NOT EXISTS(SELECT * FROM trip as t4 WHERE NOT EXISTS( SELECT * FROM tourguide as t5 WHERE t3.GuideId=t5.GuideId and t4.TripTo=t3.TripTo and t4.DepartureDate=t3.DepartureDate)))";
 
@@ -170,6 +203,9 @@ public class Menu {
 
 	}
 
+	/**
+	 * method for the query of choice 2
+	 */
 	private static void processQ2() {
 		String query = "SELECT e.Ssn, e.Lname, e.Fname, COUNT(DISTINCT htc.TripTo) as CitiesVisited "
 				+ "FROM employee as e LEFT JOIN works_on AS w ON w.Essn=e.Ssn LEFT JOIN employee_customer as ec ON ec.Emp_id=e.Ssn LEFT JOIN hotel_trip_customer as htc ON htc.CustomerId=ec.Cust_Id "
@@ -217,6 +253,9 @@ public class Menu {
 
 	}
 
+	/**
+	 * method for the query of choice 3
+	 */
 	private static void processQ3() {
 		String query = "SELECT r.restaurname,r.city,AVG(s.price) as theprice "
 				+ "FROM restaurant as r INNER JOIN serves as s ON s.restaurname=r.restaurname " + "WHERE r.city IN ( "
@@ -271,6 +310,170 @@ public class Menu {
 
 	}
 
+	/**
+	 * method for the query of choice 4
+	 */
+	private static void processQ4(Scanner sc) {
+		// TODO
+		String insert = "INSERT INTO `works_on` (`Essn`, `Pno`, `Hours`) VALUES (?, ?, ?)";
+		boolean exit = false;
+		int n = 0;
+		LinkedList<Object> list = new LinkedList<Object>();
+		while (!exit) {
+			printNicely("Write down the number of works_on tuples you want to insert: \n");
+			try {
+				n = Integer.parseInt(sc.nextLine());
+				exit = true;
+			} catch (RuntimeException e) {
+				printNicely("Please, write down an integer number\n");
+			}
+		}
+		exit = false;
+		int ssn = 12345;
+		int pno = 5;
+		double hours = 0;
+
+		for (int i = 1; i <= n; i++) {
+			printNicely("tuple number " + i + ":\n");
+
+			while (!exit) {
+				printNicely("Write down social security number of tuple " + i + ": \n");
+				try {
+					ssn = Integer.parseInt(sc.nextLine());
+					exit = true;
+				} catch (RuntimeException e) {
+					printNicely("Please, write down an integer number\n");
+				}
+			}
+			list.add(i * 3 - 3, ssn);
+			exit = false;
+			while (!exit) {
+				printNicely("Write down project number of tuple " + i + ": \n");
+				try {
+					pno = Integer.parseInt(sc.nextLine());
+					exit = true;
+				} catch (RuntimeException e) {
+					printNicely("Please, write down an integer number\n");
+				}
+			}
+			list.add(i * 3 - 2, pno);
+			exit = false;
+			while (!exit) {
+				printNicely("Write down hours of work of tuple " + i + ": \n");
+				try {
+					hours = Double.parseDouble(sc.nextLine());
+					exit = true;
+				} catch (RuntimeException e) {
+					printNicely("Please, write down a float number\n");
+				}
+			}
+			exit = false;
+			list.add(i * 3 - 1, hours);
+
+		}
+
+		try {
+
+			printNicely("This is the state of works_on table before the insertions:\n");
+			ResultSet rs = qmaker.performQuery("Select * from works_on");
+			int essn;
+			int pnm;
+			float hour;
+			try {
+				while (rs.next()) {
+
+					// Retrieve by column name
+					hour = rs.getFloat("Hours");
+					essn = rs.getInt("Essn");
+					pnm = rs.getInt("Pno");
+
+					// Display values
+					System.out.println("Social security number: " + essn + "	| Project number: " + pnm
+							+ "	| Hours of work: " + hour);
+
+				}
+
+			} catch (SQLException e) { // should not happen
+			} finally {
+
+				try {
+					qmaker.endQuery();
+				} catch (NoQueryToClose e) { // Should not happen
+
+				}
+
+			}
+
+			if (n == 1) {
+
+				System.out.println(qmaker.insertTypeQuery(insert, list) + "/1 successful query");
+
+			} else {
+				System.out.println(qmaker.insertTypeQuery(insert, list, n) + "/" + n + " successful queries");
+
+			}
+
+			try {
+				qmaker.endQuery();
+			} catch (NoQueryToClose e1) {
+				// should not happen
+			}
+
+			printNicely("This is the state of works_on table after the insertions:\n");
+			rs = qmaker.performQuery("Select * from works_on");
+
+			try {
+				while (rs.next()) {
+
+					// Retrieve by column name
+					hour = rs.getFloat("Hours");
+					essn = rs.getInt("Essn");
+					pnm = rs.getInt("Pno");
+
+					// Display values
+					System.out.println("Social security number: " + essn + "	| Project number: " + pnm
+							+ "	| Hours of work: " + hour);
+
+				}
+
+			} catch (SQLException e) {
+				// should not happen
+			} finally {
+
+				try {
+					qmaker.endQuery();
+				} catch (NoQueryToClose e) {
+					// Should not happen
+				}
+
+			}
+
+		} catch (IllegalQueryException e) {
+			System.err.println(e.getMessage());
+		} catch (AlreadyActiveQuery e) {
+			System.err.println(e.getMessage());
+		} finally {
+			try {
+				qmaker.endQuery();
+			} catch (NoQueryToClose e) {
+				// not important
+			}
+		}
+	}
+
+	/**
+	 * method for the query of choice 5
+	 */
+	private static void processQ5(Scanner sc) {
+		// TODO Auto-generated method stub
+
+	}
+
+	/**
+	 * method to set the query maker with the normal account
+	 * 
+	 * @param sc scanner
+	 */
 	private static void standardWay(Scanner sc) {
 
 		boolean exit = false;
@@ -289,6 +492,11 @@ public class Menu {
 
 	}
 
+	/**
+	 * method to introduce our own database
+	 * 
+	 * @param sn scanner
+	 */
 	private static void other(Scanner sn) {
 
 		printNicely("Insert the username of your mysql account:\n");
@@ -343,8 +551,17 @@ public class Menu {
 
 	}
 
+	/**
+	 * method for the menu to set the query maker
+	 * 
+	 * @param sn scanner
+	 * @return true if the qmaker was settled
+	 */
 	public static boolean setQmaker(Scanner sn) {
 		printNicely(s);
+
+		if (qmaker != null)
+			qmaker.endConnection();
 
 		boolean stay = true;
 		String input = sn.nextLine();
@@ -369,6 +586,11 @@ public class Menu {
 
 	}
 
+	/**
+	 * method to print strings like in an old-school videogame
+	 * 
+	 * @param s the string to print
+	 */
 	public static void printNicely(String s) {
 		for (int i = 0; i < s.length(); i++) {
 
