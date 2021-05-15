@@ -29,7 +29,7 @@ public class Testing {
 			rs = qc.performQuery("SELECT Ssn FROM employee");
 
 			try {
-
+				System.out.println(rs.toString());
 				int ssn;
 				while (rs.next()) {
 
@@ -59,10 +59,11 @@ public class Testing {
 		}
 		System.out.println("\n\n\n new query:");
 		LinkedList<Object> lk = new LinkedList<Object>();
-		lk.add(888665555);
-		lk.add(987654321);
+		lk.add(7);
+		lk.add(1);
 
 		try {
+
 			rs = qc.performQuery("SELECT Ssn FROM employee WHERE Ssn=? or Ssn=?", lk);
 
 			int ssn;

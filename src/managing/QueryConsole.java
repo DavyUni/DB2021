@@ -135,7 +135,7 @@ public class QueryConsole {
 
 		try {
 			// STEP 4: Execute a query
-			System.out.println("Creating statement...");
+			// System.out.println("Creating statement...");
 			stmt = conn.createStatement();
 			rs = stmt.executeQuery(query);
 		} catch (SQLException e) {
@@ -190,7 +190,7 @@ public class QueryConsole {
 		try {
 
 			// STEP 4: Execute a query
-			System.out.println("Creating statement...");
+			// System.out.println("Creating statement...");
 			prepStmt = conn.prepareStatement(query);
 			Iterator<Object> it = list.iterator();
 			Object o;
@@ -210,7 +210,7 @@ public class QueryConsole {
 							o.getClass() + " has been introduced with setObject method, check its correctness");
 				}
 			}
-
+			// System.out.println(prepStmt);
 			rs = prepStmt.executeQuery();
 		} catch (SQLException e) {
 			System.out.println("Something wrong with the query... Aborting.");
@@ -308,6 +308,8 @@ public class QueryConsole {
 								o.getClass() + " has been introduced with setObject method, check its correctness");
 					}
 				}
+
+				// System.out.println(prepStmt);
 
 				prepStmt.execute();
 
