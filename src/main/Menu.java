@@ -68,11 +68,25 @@ public class Menu {
 			+ "|                                                            |\n"
 			+ "|   Davy's queries section:                                  |\n"
 			+ "|                                                            |\n"
-			+ "|   type 6 to:                                               |\n"
+			+ "|   type 6 to: Get the name and surnames of the subordina-   |\n"
+			+ "|   tes of the manager who has at least 3 subordinates and   |\n"
+			+ "|   who also has the highest income of the rest of employ-   |\n"
+			+ "|   ees, who have been in the same hotel as him/her.         |\n"
 			+ "|                                                            |\n"
-			+ "|   type 7 to:                                               |\n"
+			+ "|   type 7 to: Retrieve the name, location and number of     |\n"
+			+ "|   the projects with at least 3 teammates, but not exactly  |\n"
+			+ "|   4 in total, of which male teammates that only work on    |\n"
+			+ "|   that project, have gone on a optional excurison,         |\n"
+			+ "|   did go to the city in which their project is located.    |\n"
+			+ "|   Also retrieve the city they went to.          		    |\n"
 			+ "|                                                            |\n"
-			+ "|   type 8 to:                                               |\n"
+			+ "|   type 8 to: Retrieve the name and city of restaurants     |\n"
+			+ "|   that have a supremely difficult dish (all other dishes   |\n"
+			+ "|   of that restaurant are at least 1 times easier than it)  |\n"
+			+ "|   and that are located in cities where a spanish speaking  |\n"
+			+ "|   guide has made a trip to. Also fetch the highest sales   |\n"
+			+ "|   of those restaurants, on the day of departure of the     |\n"
+			+ "|   trips.                                                   |\n"
 			+ "|                                                            |\n"
 			+ "|   type 9 to:                                               |\n"
 			+ "|                                                            |\n"
@@ -133,6 +147,18 @@ public class Menu {
 
 			case "5":
 				processQ5(sn);
+				break;
+				
+			case "6":
+				processQ6();
+				break;
+				
+			case "7":
+				processQ7();
+				break;
+
+			case "8":
+				processQ8();
 				break;
 
 			case "16":
@@ -966,6 +992,151 @@ public class Menu {
 		}
 	}
 
+	
+	/**
+	 * method for the query of choice 6
+	 */
+	private static void processQ6() {
+		String query = "SELECT e3.Fname, e3.Lname FROM employee AS e3 INNER JOIN employee_customer AS ec2 ON e3.Ssn=ec2.Emp_id INNER JOIN customer AS c2 ON ec2.Cust_Id=c2.CustomerId INNER JOIN hotel_trip_customer AS h2 ON h2.CustomerId=c2.CustomerId INNER JOIN (SELECT h.HotelId, k.Ssn FROM (SELECT e1.Ssn FROM employee AS e1 INNER JOIN employee AS e2 ON e1.Ssn=e2.Super_ssn GROUP BY e2.Super_ssn HAVING COUNT(DISTINCT e2.Ssn)>=3 AND MAX(e1.Salary)) AS k INNER JOIN employee_customer AS ec ON k.Ssn=ec.Emp_id INNER JOIN customer AS c ON ec.Cust_Id=c.CustomerId INNER JOIN hotel_trip_customer AS h ON h.CustomerId=c.CustomerId) AS k2 ON k2.HotelId=h2.HotelId WHERE e3.Super_ssn=k2.Ssn";
+
+		try {
+			ResultSet rs = qmaker.performQuery(query);
+
+			
+			String lName, fName;
+
+			try {
+				while (rs.next()) {
+
+					// Retrieve by column name
+					
+					lName = rs.getString("e3.Lname");
+					fName = rs.getString("e3.Fname");
+					
+
+					// Display values
+					System.out.println("Last name: " + lName + "	| First name: " + fName);
+
+				}
+				System.out.println("Query finished!");
+			} catch (SQLException e) {
+
+				System.err.println("Something failed retrieving the data");
+			} finally {
+
+				try {
+					qmaker.endQuery();
+				} catch (NoQueryToClose e) {
+					// Should not happen
+				}
+
+			}
+
+		} catch (IllegalUpdateException | AlreadyActiveQuery e) {
+			// cannot happen
+		}
+
+	}
+	
+	/**
+	 * method for the query of choice 8
+	 */
+	private static void processQ8() {
+		String query = "SELECT r.restaurname, r.city, MAX(ss.amount) as amount FROM restaurant as r inner join serves as s on r.restaurname=s.restaurname inner join dishes as d on s.dish=d.dish inner join sales as ss on r.restaurname=ss.restaurname where r.city IN (Select tr.TripTo as city FROM trip as tr inner Join (SELECT t.GuideId From tourguide as t inner join languages as l on t.GuideId=l.GuideId where l.Lang='Spanish') as k on tr.GuideId=k.GuideId) and d.dish in (Select dd.dish from dishes as dd where not exists(select ddd.dish from dishes as ddd where ddd.difficulty>dd.difficulty)) and ss.dateOfSale IN (Select tr.DepartureDate as city FROM trip as tr inner Join (SELECT t.GuideId From tourguide as t inner join languages as l on t.GuideId=l.GuideId where l.Lang='Spanish') as k on tr.GuideId=k.GuideId) group by r.restaurname";
+
+		try {
+			ResultSet rs = qmaker.performQuery(query);
+
+			int amount;
+			String rname, rcity;
+			
+
+			try {
+				while (rs.next()) {
+
+					// Retrieve by column name
+					amount = rs.getInt("amount");
+					rcity = rs.getString("r.city");
+					rname = rs.getString("r.restaurname");
+					
+					
+
+					// Display values
+					System.out.println("Restaurant Name: " + rname + "	| Restaurant City: " + rcity + "	| Max Sales: " + amount);
+
+				}
+				System.out.println("Query finished!");
+			} catch (SQLException e) {
+
+				System.err.println("Something failed retrieving the data");
+			} finally {
+
+				try {
+					qmaker.endQuery();
+				} catch (NoQueryToClose e) {
+					// Should not happen
+				}
+
+			}
+
+		} catch (IllegalUpdateException | AlreadyActiveQuery e) {
+			// cannot happen
+		}
+
+	}
+	
+	
+	/**
+	 * method for the query of choice 7
+	 */
+	private static void processQ7() {
+		String query = "SELECT p.Pnumber, p.Pname, p.Plocation, eoc.TripTo FROM project as p INNER JOIN works_on as w ON p.Pnumber=w.Pno INNER JOIN employee as e ON w.Essn=e.Ssn INNER JOIN employee_customer as ec on e.Ssn=ec.Emp_id INNER JOIN customer as c on ec.Cust_Id=c.CustomerId INNER JOIN excur_opt_customer as eoc on c.CustomerId=eoc.CustomerId INNER JOIN optional_excursion as oe on eoc.TripTo=oe.TripTo and eoc.DepartureDate=oe.DepartureDate WHERE e.Sex='M' and p.Plocation!=oe.TripTo and p.Pnumber IN( SELECT w2.Pno FROM works_on as w2 GROUP BY w2.Pno HAVING COUNT(w2.Pno)>=3 and COUNT(w2.Pno)!=4) and NOT EXISTS(SELECT w3.Essn FROM works_on as w3 GROUP BY Essn HAVING COUNT(w3.Essn)>1 AND e.Ssn=w3.Essn)";
+
+		try {
+			ResultSet rs = qmaker.performQuery(query);
+
+			int pnum;
+			String pname, plocation, tripTo;
+			
+
+			try {
+				while (rs.next()) {
+
+					// Retrieve by column name
+					pnum = rs.getInt("p.Pnumber");
+					pname = rs.getString("p.Pname");
+					plocation = rs.getString("p.Plocation");
+					tripTo = rs.getString("eoc.TripTo");
+					
+
+					// Display values
+					System.out.println("Project Number: " + pnum + "	| Project Name: " + pname + "	| Project Location: " + plocation
+							+ "	| Trip To: " + tripTo);
+
+				}
+				System.out.println("Query finished!");
+			} catch (SQLException e) {
+
+				System.err.println("Something failed retrieving the data");
+			} finally {
+
+				try {
+					qmaker.endQuery();
+				} catch (NoQueryToClose e) {
+					// Should not happen
+				}
+
+			}
+
+		} catch (IllegalUpdateException | AlreadyActiveQuery e) {
+			// cannot happen
+		}
+
+	}
+	
+	
+	
+	
 	/**
 	 * method to set the query maker with the normal account
 	 * 
