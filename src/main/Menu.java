@@ -44,7 +44,7 @@ public class Menu {
 			+ "|                                                            |\n"
 			+ "|   type 1 to: Retrieve the employee info, trip and guide    |\n"
 			+ "|   of all the employees that have been on a trip where the  |\n"
-			+ "|   guide either speaks 2 or more languages or has gone to   |\n"
+			+ "|   guide either speaks 2 or more languages or has gone on   |\n"
 			+ "|   all trips.                                               |\n"
 			+ "|                                                            |\n"
 			+ "|   type 2 to: Retrieve the employee info of all the         |\n"
@@ -80,15 +80,25 @@ public class Menu {
 			+ "|                                                            |\n"
 			+ "|   Juyoung's queries section:                               |\n"
 			+ "|                                                            |\n"
-			+ "|   type 11 to:                                              |\n"
+			+ "|   type 11 to: Retrieve the name and number of visitors of  |\n"
+			+ "|   the most visited restaureant in the city of Paris.       |\n"
 			+ "|                                                            |\n"
-			+ "|   type 12 to:                                              |\n"
+			+ "|   type 12 to: Retrieve the customer id, customer name and  |\n"
+			+ "|   trip information  of those  customers that  either have  |\n"
+			+ "|   gone on a trip without a guide and for less than 10 days |\n"
+			+ "|   or  that have gone  on a trip with a guide that speaks   |\n"
+			+ "|   english.                                                 |\n"
 			+ "|                                                            |\n"
-			+ "|   type 13 to:                                              |\n"
+			+ "|   type 13 to: Retrieve the employee social security number,|\n"
+			+ "|   name, surname, birthdate and guide's id and name of the  |\n"
+			+ "|   the youngest  employee that  has gone on a  trip with a  |\n"
+			+ "|   guide that speaks spanish.                               |\n"
 			+ "|                                                            |\n"
-			+ "|   type 14 to:                                              |\n"
+			+ "|   type 14 to: Insert into the database some new hotel_trip |\n"
+			+ "|   relationships. Be careful with the foreign key values.   |\n"
 			+ "|                                                            |\n"
-			+ "|   type 15 to:                                              |\n"
+			+ "|   type 15 to: Update the guide id of some guides. Remember |\n"
+			+ "|   this update will have consequences on the trip table.    |\n"
 			+ "|                                                            |\n"
 			+ "|------------------------------------------------------------|\n"
 			+ "|   type 16 to: change the working database                  |\n"
@@ -133,6 +143,44 @@ public class Menu {
 
 			case "5":
 				processQ5(sn);
+				break;
+			case "6":
+				processQ6();
+				break;
+
+			case "7":
+				processQ7();
+				break;
+
+			case "8":
+				processQ8();
+				break;
+
+			case "9":
+				processQ9(sn);
+				break;
+
+			case "10":
+				processQ10(sn);
+				break;
+			case "11":
+				processQ11();
+				break;
+
+			case "12":
+				processQ12();
+				break;
+
+			case "13":
+				processQ13();
+				break;
+
+			case "14":
+				processQ14(sn);
+				break;
+
+			case "15":
+				processQ15(sn);
 				break;
 
 			case "16":
@@ -964,6 +1012,693 @@ public class Menu {
 				// not important
 			}
 		}
+	}
+
+	/**
+	 * method for the query of choice 6
+	 */
+	private static void processQ6() {
+		// TODO Auto-generated method stub
+
+	}
+
+	/**
+	 * method for the query of choice 7
+	 */
+	private static void processQ7() {
+		// TODO Auto-generated method stub
+	}
+
+	/**
+	 * method for the query of choice 8
+	 */
+	private static void processQ8() {
+		// TODO Auto-generated method stub
+	}
+
+	/**
+	 * method for the query of choice 9
+	 */
+	private static void processQ9(Scanner sc) {
+		// TODO Auto-generated method stub
+
+	}
+
+	/**
+	 * method for the query of choice 10
+	 */
+	private static void processQ10(Scanner sc) {
+		// TODO Auto-generated method stub
+
+	}
+
+	/**
+	 * method for the query of choice 11
+	 */
+	private static void processQ11() {
+		String query = "SELECT r.restaurname, COUNT(*) as visitors FROM restaurant AS r"
+				+ " INNER JOIN frequents AS f ON r.restaurname = f.restaurname WHERE r.city = 'Paris'"
+				+ " GROUP BY f.restaurname HAVING  COUNT(*)>=ALL( SELECT Count(*)"
+				+ " FROM frequents as f2 INNER JOIN restaurant as r2 ON r2.restaurname=f2.restaurname"
+				+ " WHERE r2.city='Paris' GROUP BY f2.restaurname )";
+
+		try {
+			ResultSet rs = qmaker.performQuery(query);
+
+			int visitors;
+			String rName;
+
+			try {
+				while (rs.next()) {
+
+					// Retrieve by column name
+					rName = rs.getString("r.restaurname");
+					visitors = rs.getInt("visitors");
+
+					// Display values
+					System.out.println("Restaurant name: " + rName + "	| Visitors: " + visitors);
+
+				}
+				System.out.println("Query finished!");
+			} catch (SQLException e) {
+
+				System.err.println("Something failed retrieving the data");
+			} finally {
+
+				try {
+					qmaker.endQuery();
+				} catch (NoQueryToClose e) {
+					// Should not happen
+				}
+
+			}
+
+		} catch (IllegalUpdateException | AlreadyActiveQuery e) {
+			// cannot happen
+		}
+	}
+
+	/**
+	 * method for the query of choice 12
+	 */
+	private static void processQ12() {
+		String query = "SELECT customer.CustomerId, customer.custname, trip.TripTo, trip.DepartureDate"
+				+ " FROM CUSTOMER INNER JOIN HOTEL_TRIP_CUSTOMER ON CUSTOMER.CustomerId = HOTEL_TRIP_CUSTOMER.CustomerId"
+				+ " INNER JOIN TRIP INNER JOIN TOURGUIDE ON TRIP.GuideId = TOURGUIDE.GuideId"
+				+ " and TRIP.TripTo = HOTEL_TRIP_CUSTOMER.TripTo "
+				+ " AND TRIP.DepartureDate = HOTEL_TRIP_CUSTOMER.DepartureDate"
+				+ " INNER JOIN LANGUAGES as l ON TOURGUIDE.GuideId = l.GuideId"
+				+ " WHERE l.Lang = 'English' or (trip.Numdays <= 10 AND trip.GuideId IS NULL)";
+		try {
+			ResultSet rs = qmaker.performQuery(query);
+
+			int custId;
+			String cName, tripTo;
+			Date depDate;
+
+			try {
+				while (rs.next()) {
+
+					// Retrieve by column name
+					custId = rs.getInt("customer.CustomerId");
+					cName = rs.getString("customer.custname");
+					tripTo = rs.getString("trip.TripTo");
+					depDate = rs.getDate("trip.DepartureDate");
+
+					// Display values
+					System.out.println("Customer ID: " + custId + "	| Customer name: " + cName + "	| Trip to: "
+							+ tripTo + "	| Departure date: " + depDate);
+
+				}
+				System.out.println("Query finished!");
+			} catch (SQLException e) {
+
+				System.err.println("Something failed retrieving the data");
+			} finally {
+
+				try {
+					qmaker.endQuery();
+				} catch (NoQueryToClose e) {
+					// Should not happen
+				}
+
+			}
+
+		} catch (IllegalUpdateException | AlreadyActiveQuery e) {
+			// cannot happen
+		}
+
+	}
+
+	/**
+	 * method for the query of choice 13
+	 */
+	private static void processQ13() {
+		String query = "SELECT employee.Ssn, employee.Fname, employee.Lname, employee.Bdate, tourguide.GuideId, tourguide.guidename "
+				+ "FROM employee_customer INNER JOIN CUSTOMER ON employee_customer.Cust_Id = customer.CustomerId "
+				+ "INNER JOIN HOTEL_TRIP_CUSTOMER ON CUSTOMER.CustomerId = HOTEL_TRIP_CUSTOMER.CustomerId "
+				+ "INNER JOIN TRIP INNER JOIN TOURGUIDE ON TRIP.GuideId = TOURGUIDE.GuideId "
+				+ "and TRIP.TripTo = HOTEL_TRIP_CUSTOMER.TripTo "
+				+ "AND TRIP.DepartureDate = HOTEL_TRIP_CUSTOMER.DepartureDate "
+				+ "INNER JOIN LANGUAGES ON TOURGUIDE.GuideId = LANGUAGES.GuideId "
+				+ "inner JOIN employee ON employee_customer.Emp_id=employee.Ssn "
+				+ "WHERE Languages.Lang = 'Spanish' and employee.Bdate >=ALL( " + "SELECT e.bdate "
+				+ "from employee as e INNER JOIN employee_customer as ec on e.Ssn=ec.Emp_id "
+				+ "INNER JOIN hotel_trip_customer as htc on htc.CustomerId=ec.Cust_Id "
+				+ "INNER JOIN trip as t on t.TripTo=htc.TripTo and t.DepartureDate=htc.DepartureDate "
+				+ "INNER JOIN languages as l on l.GuideId=t.GuideId and l.Lang='Spanish' " + ")";
+		try {
+			ResultSet rs = qmaker.performQuery(query);
+
+			int ssn, guideId;
+			String lName, fName, guidename;
+			Date bDate;
+
+			try {
+				while (rs.next()) {
+
+					// Retrieve by column name
+					ssn = rs.getInt("employee.Ssn");
+					lName = rs.getString("employee.Lname");
+					fName = rs.getString("employee.Fname");
+					bDate = rs.getDate("employee.Bdate");
+					guideId = rs.getInt("tourguide.GuideId");
+					guidename = rs.getString("tourguide.guidename");
+
+					// Display values
+					System.out.println("Ssn: " + ssn + "	| Last name: " + lName + "	| First name: " + fName
+							+ "	| Birth date: " + bDate + "	| GuideId: " + guideId + "	| Guide name: " + guidename);
+
+				}
+				System.out.println("Query finished!");
+			} catch (SQLException e) {
+
+				System.err.println("Something failed retrieving the data");
+			} finally {
+
+				try {
+					qmaker.endQuery();
+				} catch (NoQueryToClose e) {
+					// Should not happen
+				}
+
+			}
+
+		} catch (IllegalUpdateException | AlreadyActiveQuery e) {
+			// cannot happen
+		}
+
+	}
+
+	/**
+	 * method for the query of choice 14
+	 */
+	private static void processQ14(Scanner sc) {
+		String insert = "INSERT INTO `hotel_trip` (`TripTo`, `DepartureDate`, `HotelId`, `price`) VALUES (?, ?, ?, ?)";
+		boolean exit = false;
+		int n = 0;
+		LinkedList<Object> list = new LinkedList<Object>();
+		while (!exit) {
+			printNicely("Write down the number of hotel_trip tuples you want to insert: \n");
+			try {
+				n = Integer.parseInt(sc.nextLine());
+				exit = true;
+			} catch (RuntimeException e) {
+				printNicely("Please, write down an integer number\n");
+			}
+		}
+		exit = false;
+
+		String tripTo, dDate, hotelId;
+		tripTo = dDate = hotelId = "";
+		Date depDate = null;
+		double price = 0;
+
+		for (int i = 1; i <= n; i++) {
+			printNicely("tuple number " + i + ":\n");
+
+			printNicely("Write down the tripTo value of tuple " + i + ": \n");
+
+			tripTo = sc.nextLine();
+
+			list.add(i * 4 - 4, tripTo);
+
+			while (!exit) {
+				printNicely("Write down the departure date (YYYY-MM-DD) of tuple " + i + ": \n");
+				try {
+					dDate = sc.nextLine();
+					depDate = Date.valueOf(dDate);
+					exit = true;
+				} catch (RuntimeException e) {
+					printNicely("Please, write down a date with the correct format\n");
+				}
+			}
+			list.add(i * 4 - 3, depDate);
+			exit = false;
+
+			printNicely("Write down the hotel id of tuple " + i + ": \n");
+
+			hotelId = sc.nextLine();
+
+			list.add(i * 4 - 2, hotelId);
+
+			while (!exit) {
+				printNicely("Write down price of tuple " + i + ": \n");
+				try {
+					price = Double.parseDouble(sc.nextLine());
+					exit = true;
+				} catch (RuntimeException e) {
+					printNicely("Please, write down a float number\n");
+				}
+			}
+			exit = false;
+			list.add(i * 4 - 1, price);
+
+		}
+
+		try {
+
+			printNicely("This is the state of hotel_trip table before the insertions:\n");
+			ResultSet rs = qmaker.performQuery("Select * from hotel_trip");
+			String tt, hid;
+			float pri;
+			Date dd;
+			try {
+				while (rs.next()) {
+
+					// Retrieve by column name
+					pri = rs.getFloat("price");
+					dd = rs.getDate("DepartureDate");
+					tt = rs.getString("TripTo");
+					hid = rs.getString("HotelId");
+
+					// Display values
+					System.out.println("Trip to: " + tt + "	| Departure date: " + dd + "	| Hotel Id: " + hid
+							+ "	| Price: " + pri);
+
+				}
+
+			} catch (SQLException e) { // should not happen
+			} finally {
+
+				try {
+					qmaker.endQuery();
+				} catch (NoQueryToClose e) { // Should not happen
+
+				}
+
+			}
+
+			if (n == 1) {
+
+				System.out.println(qmaker.insertTypeQuery(insert, list) + "/1 successful query");
+
+			} else {
+				System.out.println(qmaker.insertTypeQuery(insert, list, n) + "/" + n + " successful queries");
+
+			}
+
+			try {
+				qmaker.endQuery();
+			} catch (NoQueryToClose e1) {
+				// should not happen
+			}
+
+			printNicely("This is the state of hotel_trip table after the insertions:\n");
+			rs = qmaker.performQuery("Select * from hotel_trip");
+
+			try {
+				while (rs.next()) {
+
+					// Retrieve by column name
+					pri = rs.getFloat("price");
+					dd = rs.getDate("DepartureDate");
+					tt = rs.getString("TripTo");
+					hid = rs.getString("HotelId");
+
+					// Display values
+					System.out.println("Trip to: " + tt + "	| Departure date: " + dd + "	| Hotel Id: " + hid
+							+ "	| Price: " + pri);
+
+				}
+
+			} catch (SQLException e) {
+				// should not happen
+			} finally {
+
+				try {
+					qmaker.endQuery();
+				} catch (NoQueryToClose e) {
+					// Should not happen
+				}
+
+			}
+
+		} catch (IllegalQueryException e) {
+			System.err.println(e.getMessage());
+		} catch (AlreadyActiveQuery e) {
+			System.err.println(e.getMessage());
+		} finally {
+			try {
+				qmaker.endQuery();
+			} catch (NoQueryToClose e) {
+				// not important
+			}
+		}
+	}
+
+	/**
+	 * method for the query of choice 15
+	 */
+	private static void processQ15(Scanner sc) {
+		String update = "Update tourguide set GuideId=? Where GuideId=?";
+
+		boolean exit = false;
+		int n = 0;
+		LinkedList<Object> list = new LinkedList<Object>();
+		LinkedList<Object> temp1 = new LinkedList<Object>();
+		LinkedList<Object> temp2 = new LinkedList<Object>();
+
+		while (!exit) {
+			printNicely("Write down the number of guide id updates you want to do: \n");
+			try {
+				n = Integer.parseInt(sc.nextLine());
+				exit = true;
+			} catch (RuntimeException e) {
+				printNicely("Please, write down an integer number\n");
+			}
+		}
+		exit = false;
+		int guideId1 = 0;
+		int guideId2 = 0;
+
+		for (int i = 1; i <= n; i++) {
+			printNicely("tuple number " + i + ":\n");
+
+			while (!exit) {
+				printNicely("Write down guide id of tuple " + i + ": \n");
+				try {
+					guideId1 = Integer.parseInt(sc.nextLine());
+					exit = true;
+				} catch (RuntimeException e) {
+					printNicely("Please, write down an integer number\n");
+				}
+			}
+
+			exit = false;
+			while (!exit) {
+				printNicely("Write down the new guide id of tuple " + i + ": \n");
+				try {
+					guideId2 = Integer.parseInt(sc.nextLine());
+					exit = true;
+				} catch (RuntimeException e) {
+					printNicely("Please, write down an integer number\n");
+				}
+			}
+			list.add(i * 2 - 2, guideId2);
+			temp2.add(guideId1);
+			list.add(i * 2 - 1, guideId1);
+			temp1.add(guideId2);
+			exit = false;
+
+		}
+		try {
+
+			printNicely("These are all the tuples where this guide id appears before the update(s):\n");
+
+			// employee_customer, employee, dependent, works_on, (department)
+			// rs.next;rs.previous
+
+			String q1, q2, q3;
+
+			q1 = "select * from tourguide where GuideId=?";
+			q2 = "select * from trip where GuideId=?";
+			q3 = "select * from languages where GuideId=?";
+
+			ResultSet rs = null;
+
+			LinkedList<Object> temp3;
+			try {
+
+				System.out.println("Table tourguide for the updated tuples before the updation:");
+				for (Object o : temp2) {
+
+					temp3 = new LinkedList<Object>();
+					temp3.add(o);
+					rs = qmaker.performQuery(q1, temp3);
+					// goes back
+
+					String gnam;
+					int gid, gnum;
+					while (rs.next()) {
+
+						gid = rs.getInt("guideid");
+						gnum = rs.getInt("guidephone");
+						gnam = rs.getString("guidename");
+
+						// Display values
+						System.out
+								.println("Guide Id: " + gid + "	| Guide name: " + gnam + "	| Guide phone: " + gnum);
+					}
+
+					try {
+						qmaker.endQuery();
+					} catch (NoQueryToClose e) {
+						// nomatter
+					}
+
+				}
+			} catch (SQLException e) {
+				System.err.println("Fatal error with a query");
+			} finally {
+				System.out.println();
+				try {
+					qmaker.endQuery();
+				} catch (NoQueryToClose e) {
+					// don't care
+				}
+			}
+
+			try {
+				System.out.println("Table trip for the updated tuples before the updation:");
+				for (Object o : temp2) {
+					temp3 = new LinkedList<Object>();
+					temp3.add(o);
+					rs = qmaker.performQuery(q2, temp3);
+					// goes back
+					String tto, cdep;
+					int nday, pday, gid;
+					Date ddate;
+					while (rs.next()) {
+
+						tto = rs.getString("tripto");
+						cdep = rs.getString("citydeparture");
+						nday = rs.getInt("numdays");
+						ddate = rs.getDate("DepartureDate");
+						pday = rs.getInt("ppday");
+						gid = rs.getInt("guideid");
+
+						// Display values
+						System.out.println("Trip to: " + tto + "	| Departure date: " + ddate + "	| Number of days: "
+								+ nday + "	| Departure city: " + cdep + "	| Guide id: " + gid + "	| Ppday: " + pday);
+					}
+					try {
+						qmaker.endQuery();
+					} catch (NoQueryToClose e) {
+						// nomatter
+					}
+				}
+			} catch (SQLException e) {
+				System.err.println("Fatal error with a query");
+			} finally {
+				System.out.println();
+				try {
+					qmaker.endQuery();
+				} catch (NoQueryToClose e) {
+					// don't care
+				}
+			}
+
+			try {
+				System.out.println("Table languages for the updated tuples before the updation:");
+				for (Object o : temp2) {
+					temp3 = new LinkedList<Object>();
+					temp3.add(o);
+					rs = qmaker.performQuery(q3, temp3);
+					// goes back
+					String lan;
+					int gid;
+					while (rs.next()) {
+
+						lan = rs.getString("Lang");
+						gid = rs.getInt("guideid");
+
+						// Display values
+						System.out.println("Guide id: " + gid + "	| Language: " + lan);
+					}
+					try {
+						qmaker.endQuery();
+					} catch (NoQueryToClose e) {
+						// nomatter
+					}
+				}
+			} catch (SQLException e) {
+				System.err.println("Fatal error with a query");
+			} finally {
+				System.out.println();
+				try {
+					qmaker.endQuery();
+				} catch (NoQueryToClose e) {
+					// don't care
+				}
+			} // end of showing first state
+
+			if (n == 1) {
+
+				System.out.println(qmaker.updateTypeQuery(update, list) + "/1 successful update");
+
+			} else {
+				System.out.println(qmaker.updateTypeQuery(update, list, n) + "/" + n + " successful updates");
+
+			}
+
+			try {
+				qmaker.endQuery();
+			} catch (NoQueryToClose e1) {
+				// should not happen
+			}
+
+			printNicely(
+					"These are all the tuples where this guide id appears after the update(s) (In case of failed updation, this will print the tuples corresponding to the guide id that matches\n"
+							+ "with the new guide id you wanted to update to someone):\n");
+
+			try {
+
+				System.out.println("Table tourguide for the updated tuples before the updation:");
+				for (Object o : temp1) {
+
+					temp3 = new LinkedList<Object>();
+					temp3.add(o);
+					rs = qmaker.performQuery(q1, temp3);
+					// goes back
+
+					String gnam;
+					int gid, gnum;
+					while (rs.next()) {
+
+						gid = rs.getInt("guideid");
+						gnum = rs.getInt("guidephone");
+						gnam = rs.getString("guidename");
+
+						// Display values
+						System.out
+								.println("Guide Id: " + gid + "	| Guide name: " + gnam + "	| Guide phone: " + gnum);
+					}
+
+					try {
+						qmaker.endQuery();
+					} catch (NoQueryToClose e) {
+						// nomatter
+					}
+
+				}
+			} catch (SQLException e) {
+				System.err.println("Fatal error with a query");
+			} finally {
+				System.out.println();
+				try {
+					qmaker.endQuery();
+				} catch (NoQueryToClose e) {
+					// don't care
+				}
+			}
+
+			try {
+				System.out.println("Table trip for the updated tuples before the updation:");
+				for (Object o : temp1) {
+					temp3 = new LinkedList<Object>();
+					temp3.add(o);
+					rs = qmaker.performQuery(q2, temp3);
+					// goes back
+					String tto, cdep;
+					int nday, pday, gid;
+					Date ddate;
+					while (rs.next()) {
+
+						tto = rs.getString("tripto");
+						cdep = rs.getString("citydeparture");
+						nday = rs.getInt("numdays");
+						ddate = rs.getDate("DepartureDate");
+						pday = rs.getInt("ppday");
+						gid = rs.getInt("guideid");
+
+						// Display values
+						System.out.println("Trip to: " + tto + "	| Departure date: " + ddate + "	| Number of days: "
+								+ nday + "	| Departure city: " + cdep + "	| Guide id: " + gid + "	| Ppday: " + pday);
+					}
+					try {
+						qmaker.endQuery();
+					} catch (NoQueryToClose e) {
+						// nomatter
+					}
+				}
+			} catch (SQLException e) {
+				System.err.println("Fatal error with a query");
+			} finally {
+				System.out.println();
+				try {
+					qmaker.endQuery();
+				} catch (NoQueryToClose e) {
+					// don't care
+				}
+			}
+
+			try {
+				System.out.println("Table languages for the updated tuples before the updation:");
+				for (Object o : temp1) {
+					temp3 = new LinkedList<Object>();
+					temp3.add(o);
+					rs = qmaker.performQuery(q3, temp3);
+					// goes back
+					String lan;
+					int gid;
+					while (rs.next()) {
+
+						lan = rs.getString("Lang");
+						gid = rs.getInt("guideid");
+
+						// Display values
+						System.out.println("Guide id: " + gid + "	| Language: " + lan);
+					}
+					try {
+						qmaker.endQuery();
+					} catch (NoQueryToClose e) {
+						// nomatter
+					}
+				}
+			} catch (SQLException e) {
+				System.err.println("Fatal error with a query");
+			} finally {
+				System.out.println();
+				try {
+					qmaker.endQuery();
+				} catch (NoQueryToClose e) {
+					// don't care
+				}
+			}
+
+		} catch (IllegalQueryException e) {
+			System.err.println(e.getMessage());
+		} catch (AlreadyActiveQuery e) {
+			System.err.println(e.getMessage());
+		} finally {
+			try {
+				qmaker.endQuery();
+			} catch (NoQueryToClose e) {
+				// not important
+			}
+		}
+
 	}
 
 	/**
