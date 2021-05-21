@@ -313,6 +313,10 @@ public class QueryConsole {
 
 				prepStmt.execute();
 
+				if (prepStmt.getUpdateCount() <= 0) {
+					throw new SQLException();
+				}
+
 				conn.commit();
 				success++;
 			} catch (SQLException e) {
@@ -321,6 +325,11 @@ public class QueryConsole {
 					endQuery();
 				} catch (NoQueryToClose e2) {
 					// Will not happen
+				}
+				try {
+					prepStmt = conn.prepareStatement(update);
+				} catch (SQLException e1) {
+					// return -1;
 				}
 				try {
 					conn.rollback(backup);
@@ -427,6 +436,11 @@ public class QueryConsole {
 					endQuery();
 				} catch (NoQueryToClose e2) {
 					// Will not happen
+				}
+				try {
+					prepStmt = conn.prepareStatement(insert);
+				} catch (SQLException e1) {
+					// return -1;
 				}
 				try {
 					conn.rollback(backup);

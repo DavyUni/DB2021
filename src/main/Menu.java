@@ -30,8 +30,14 @@ public class Menu {
 	private static String s = "--------------------------------------------------------------\n"
 			+ "|                      Select a choice:                      |\n"
 			+ "|------------------------------------------------------------|\n"
-			+ "| type 1 if you want to access to an standard account and DB |\n"
-			+ "| type 2 to introduce your own account and DataBase          |\n"
+			+ "| type 1 if you want to access to Davy's account and DB      |\n"
+			+ "|------------------------------------------------------------|\n"
+			+ "| type 2 if you want to access to Iker's account and DB      |\n"
+			+ "|------------------------------------------------------------|\n"
+			+ "| type 3 if you want to access to Juyoung's account and DB   |\n"
+			+ "|------------------------------------------------------------|\n"
+			+ "| type 4 to introduce your own account and DataBase          |\n"
+			+ "|------------------------------------------------------------|\n"
 			+ "| type anything else to terminate the execution              |\n"
 			+ "--------------------------------------------------------------\n";
 	/**
@@ -380,6 +386,8 @@ public class Menu {
 
 	/**
 	 * method for the query of choice 4
+	 * 
+	 * @param sc is the scanner for the input
 	 */
 	private static void processQ4(Scanner sc) {
 
@@ -531,6 +539,8 @@ public class Menu {
 
 	/**
 	 * method for the query of choice 5
+	 * 
+	 * @param sc is the scanner for the input
 	 */
 	private static void processQ5(Scanner sc) {
 
@@ -1175,6 +1185,8 @@ public class Menu {
 
 	/**
 	 * method for the query of choice 9
+	 * 
+	 * @param sc is the scanner for the input
 	 */
 	private static void processQ9(Scanner sc) {
 		String insert = "INSERT INTO `employee_customer` (`Emp_id`, `Cust_id`) VALUES (?, ?)";
@@ -1309,6 +1321,8 @@ public class Menu {
 
 	/**
 	 * method for the query of choice 10
+	 * 
+	 * @param sc is the scanner for the input
 	 */
 	private static void processQ10(Scanner sc) {
 		String update = "Update department set Dnumber=? Where Dnumber=?";
@@ -1603,7 +1617,7 @@ public class Menu {
 
 			try {
 				System.out.println("Table employee for the updated tuples after the update:");
-				for (Object o : temp2) {
+				for (Object o : temp1) {
 					temp3 = new LinkedList<Object>();
 					temp3.add(o);
 					rs = qmaker.performQuery(q2, temp3);
@@ -1650,7 +1664,7 @@ public class Menu {
 
 			try {
 				System.out.println("Table department for the updated tuples after the update:");
-				for (Object o : temp2) {
+				for (Object o : temp1) {
 					temp3 = new LinkedList<Object>();
 					temp3.add(o);
 					rs = qmaker.performQuery(q3, temp3);
@@ -1689,7 +1703,7 @@ public class Menu {
 
 			try {
 				System.out.println("Table dept_locations for the updated tuples after the update:");
-				for (Object o : temp2) {
+				for (Object o : temp1) {
 					temp3 = new LinkedList<Object>();
 					temp3.add(o);
 					rs = qmaker.performQuery(q4, temp3);
@@ -1895,6 +1909,8 @@ public class Menu {
 
 	/**
 	 * method for the query of choice 14
+	 * 
+	 * @param sc is the scanner for the input
 	 */
 	private static void processQ14(Scanner sc) {
 		String insert = "INSERT INTO `hotel_trip` (`TripTo`, `DepartureDate`, `HotelId`, `price`) VALUES (?, ?, ?, ?)";
@@ -2052,6 +2068,8 @@ public class Menu {
 
 	/**
 	 * method for the query of choice 15
+	 * 
+	 * @param sc is the scanner for the input
 	 */
 	private static void processQ15(Scanner sc) {
 		String update = "Update tourguide set GuideId=? Where GuideId=?";
@@ -2388,13 +2406,16 @@ public class Menu {
 	 * method to set the query maker with the normal account
 	 * 
 	 * @param sc scanner
+	 * @param i  number that represents whose account to access. 1-Davy's, 2-Iker's
+	 *           and 3-Jouyoung's
 	 */
-	private static void standardWay(Scanner sc) {
+	private static void standardWay(Scanner sc, int i) {
 
 		boolean exit = false;
 		while (!exit) {
 			try {
-				qmaker = new QueryConsole(Credentials.getUser(), Credentials.getPassword(), Credentials.getDatabase());
+				qmaker = new QueryConsole(Credentials.getUser(i), Credentials.getPassword(i),
+						Credentials.getDatabase(i));
 				exit = true;
 			} catch (SQLException throwables) {
 				printNicely(
@@ -2483,10 +2504,15 @@ public class Menu {
 
 		switch (input) {
 		case "1":
-			standardWay(sn);
+			standardWay(sn, 1);
 			break;
-
 		case "2":
+			standardWay(sn, 2);
+			break;
+		case "3":
+			standardWay(sn, 3);
+			break;
+		case "4":
 			other(sn);
 			break;
 
