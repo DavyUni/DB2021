@@ -78,7 +78,7 @@ public class Menu {
 			+ "|   4 in total, of which male teammates that only work on    |\n"
 			+ "|   that project, have gone on a optional excurison,         |\n"
 			+ "|   did go to the city in which their project is located.    |\n"
-			+ "|   Also retrieve the city they went to.          		    |\n"
+			+ "|   Also retrieve the city they went to.                     |\n"
 			+ "|                                                            |\n"
 			+ "|   type 8 to: Retrieve the name and city of restaurants     |\n"
 			+ "|   that have a supremely difficult dish (all other dishes   |\n"
@@ -88,9 +88,15 @@ public class Menu {
 			+ "|   of those restaurants, on the day of departure of the     |\n"
 			+ "|   trips.                                                   |\n"
 			+ "|                                                            |\n"
-			+ "|   type 9 to:                                               |\n"
+			+ "|   type 9 to: Insert into the database some new employee_c- |\n"
+			+ "|   ustomer relationships. Be careful to use existing social |\n"
+			+ "|   security and customer Id numbers as they are foreign key |\n"
+			+ "|   and are used to connect two database models in this case.|\n"			
 			+ "|                                                            |\n"
-			+ "|   type 10 to:                                              |\n"
+			+ "|   type 10 to: Update the Department Number of some Depart- |\n"
+			+ "|   ments. These updates will have side-effects on various   |\n"
+			+ "|   other tables, where the Department Number is used as for-|\n"
+			+ "|   eign key.                                                |\n"
 			+ "|                                                            |\n"
 			+ "|   Juyoung's queries section:                               |\n"
 			+ "|                                                            |\n"
@@ -159,6 +165,14 @@ public class Menu {
 
 			case "8":
 				processQ8();
+				break;
+				
+			case "9":
+				processQ9(sn);
+				break;
+
+			case "10":
+				processQ10(sn);
 				break;
 
 			case "16":
@@ -1037,6 +1051,574 @@ public class Menu {
 		}
 
 	}
+	
+	/**
+	 * method for the query of choice 10
+	 */
+	private static void processQ10(Scanner sc) {
+
+		String update = "Update department set Dnumber=? Where Dnumber=?";
+
+		boolean exit = false;
+		int n = 0;
+		LinkedList<Object> list = new LinkedList<Object>();
+		LinkedList<Object> temp1 = new LinkedList<Object>();
+		LinkedList<Object> temp2 = new LinkedList<Object>();
+
+		while (!exit) {
+			printNicely("Write down the number of Department Number updates you want to do: \n");
+			try {
+				n = Integer.parseInt(sc.nextLine());
+				exit = true;
+			} catch (RuntimeException e) {
+				printNicely("Please, write down an integer number\n");
+			}
+		}
+		exit = false;
+		int dn1 = 0;
+		int dn2 = 0;
+
+		for (int i = 1; i <= n; i++) {
+			printNicely("tuple number " + i + ":\n");
+
+			while (!exit) {
+				printNicely("Write down Department Number of tuple " + i + ": \n");
+				try {
+					dn1 = Integer.parseInt(sc.nextLine());
+					exit = true;
+				} catch (RuntimeException e) {
+					printNicely("Please, write down an integer number\n");
+				}
+			}
+
+			exit = false;
+			while (!exit) {
+				printNicely("Write down the new Department Number of tuple " + i + ": \n");
+				try {
+					dn2 = Integer.parseInt(sc.nextLine());
+					exit = true;
+				} catch (RuntimeException e) {
+					printNicely("Please, write down an integer number\n");
+				}
+			}
+			list.add(i * 2 - 2, dn2);
+			temp2.add(dn1);
+			list.add(i * 2 - 1, dn1);
+			temp1.add(dn2);
+			exit = false;
+
+		}
+		try {
+
+			printNicely("These are all the tuples where this Department Number appears before the update(s):\n");
+
+			// employee_customer, employee, dependent, works_on, (department)
+			// rs.next;rs.previous
+
+			String q1, q2, q3, q4;
+
+			q1 = "select * from project where Dnum=?";
+			q2 = "select * from employee where Dno=?";
+			q3 = "select * from department where Dnumber=?";
+			q4 = "select * from dept_locations where Dnumber=?";
+			
+
+			ResultSet rs = null;
+
+			LinkedList<Object> temp3;
+			try {
+
+				System.out.println("Table project for the updated tuples before the update:");
+				for (Object o : temp2) {
+
+					temp3 = new LinkedList<Object>();
+					temp3.add(o);
+					rs = qmaker.performQuery(q1, temp3);
+					// goes back
+
+					int pNum, dNum;
+					String pName, pLocation;
+					while (rs.next()) {
+
+						pName = rs.getString("Pname");
+						pNum = rs.getInt("Pnumber");
+						pLocation = rs.getString("Plocation");
+						dNum = rs.getInt("Dnum");
+
+						// Display values
+						System.out.println("Project Name: " + pName + "	| Project Number: " + pNum + " | Project Location: " + pLocation + " | Department Number: " + dNum);
+					}
+
+					try {
+						qmaker.endQuery();
+					} catch (NoQueryToClose e) {
+						// nomatter
+					}
+
+				}
+			} catch (SQLException e) {
+				System.err.println("Fatal error with a query");
+			} finally {
+				System.out.println();
+				try {
+					qmaker.endQuery();
+				} catch (NoQueryToClose e) {
+					// don't care
+				}
+			}
+
+			try {
+				System.out.println("Table employee for the updated tuples before the update:");
+				for (Object o : temp2) {
+					temp3 = new LinkedList<Object>();
+					temp3.add(o);
+					rs = qmaker.performQuery(q2, temp3);
+					// goes back
+					String fName, minit, lName, address, sex;
+					int ssn, sussn, dno;
+					float salary;
+					Date bdate;
+					while (rs.next()) {
+
+						fName = rs.getString("fname");
+						minit = rs.getString("minit");
+						lName = rs.getString("lname");
+						ssn = rs.getInt("ssn");
+						bdate = rs.getDate("bdate");
+						address = rs.getString("address");
+						sex = rs.getString("sex");
+						salary = rs.getFloat("salary");
+						sussn = rs.getInt("super_ssn");
+						dno = rs.getInt("dno");
+
+						// Display values
+						System.out.println("First name: " + fName + "	| Minit: " + minit + "	| Last name: " + lName
+								+ "	| Social security number: " + ssn + "	| Birth date: " + bdate + "	| Address: "
+								+ address + "	| Sex: " + sex + "	| Salary: " + salary
+								+ "	| Superior's social security number: " + sussn + "	| Department number: " + dno);
+					}
+					try {
+						qmaker.endQuery();
+					} catch (NoQueryToClose e) {
+						// nomatter
+					}
+				}
+			} catch (SQLException e) {
+				System.err.println("Fatal error with a query");
+			} finally {
+				System.out.println();
+				try {
+					qmaker.endQuery();
+				} catch (NoQueryToClose e) {
+					// don't care
+				}
+			}
+
+			try {
+				System.out.println("Table department for the updated tuples before the update:");
+				for (Object o : temp2) {
+					temp3 = new LinkedList<Object>();
+					temp3.add(o);
+					rs = qmaker.performQuery(q3, temp3);
+					// goes back
+					String dName;
+					int dNum, mSsn;
+					Date msDate;
+					while (rs.next()) {
+
+						dName = rs.getString("Dname");
+						dNum = rs.getInt("Dnumber");
+						mSsn = rs.getInt("Mgr_ssn");
+						msDate = rs.getDate("Mgr_start_date");
+						
+
+						// Display values
+						System.out.println("Department Name: " + dName + "	| Department Number: " + dNum
+								+ "	| Manager's Social Security Number: " + mSsn + "	| Manager's starting date: " + msDate);
+					}
+					try {
+						qmaker.endQuery();
+					} catch (NoQueryToClose e) {
+						// nomatter
+					}
+				}
+			} catch (SQLException e) {
+				System.err.println("Fatal error with a query");
+			} finally {
+				System.out.println();
+				try {
+					qmaker.endQuery();
+				} catch (NoQueryToClose e) {
+					// don't care
+				}
+			}
+
+			try {
+				System.out.println("Table dept_locations for the updated tuples before the update:");
+				for (Object o : temp2) {
+					temp3 = new LinkedList<Object>();
+					temp3.add(o);
+					rs = qmaker.performQuery(q4, temp3);
+
+					int dNum;
+					String dLoc;
+					while (rs.next()) {
+
+						dNum = rs.getInt("Dnumber");
+						dLoc = rs.getString("Dlocation");
+						
+
+						// Display values
+						System.out.println("Department Number: " + dNum + "	| Department Location: " + dLoc);
+					}
+					try {
+						qmaker.endQuery();
+					} catch (NoQueryToClose e) {
+						// nomatter
+					}
+				}
+			} catch (SQLException e) {
+				System.err.println("Fatal error with a query");
+			} finally {
+				System.out.println();
+				try {
+					qmaker.endQuery();
+				} catch (NoQueryToClose e) {
+					// don't care
+				}
+			} // End of showing the initial state of the to-be updated tables.
+
+			if (n == 1) {
+
+				System.out.println(qmaker.updateTypeQuery(update, list) + "/1 successful update");
+
+			} else {
+				System.out.println(qmaker.updateTypeQuery(update, list, n) + "/" + n + " successful updates");
+
+			}
+
+			try {
+				qmaker.endQuery();
+			} catch (NoQueryToClose e1) {
+				// should not happen
+			}
+
+			printNicely(
+					"These are all the tuples where this Department number appears after the update(s) (In case of failed updation, this will print the tuples corresponding to the Dnum that matches\n"
+							+ "with the new Dnum you wanted to update):\n");
+			try {
+
+				System.out.println("Table project for the updated tuples after the update:");
+				for (Object o : temp1) {
+
+					temp3 = new LinkedList<Object>();
+					temp3.add(o);
+					rs = qmaker.performQuery(q1, temp3);
+					// goes back
+
+					int pNum, dNum;
+					String pName, pLocation;
+					while (rs.next()) {
+
+						pName = rs.getString("Pname");
+						pNum = rs.getInt("Pnumber");
+						pLocation = rs.getString("Plocation");
+						dNum = rs.getInt("Dnum");
+
+						// Display values
+						System.out.println("Project Name: " + pName + "	| Project Number: " + pNum + " | Project Location: " + pLocation + " | Department Number: " + dNum);
+					}
+
+					try {
+						qmaker.endQuery();
+					} catch (NoQueryToClose e) {
+						// nomatter
+					}
+
+				}
+			} catch (SQLException e) {
+				System.err.println("Fatal error with a query");
+			} finally {
+				System.out.println();
+				try {
+					qmaker.endQuery();
+				} catch (NoQueryToClose e) {
+					// don't care
+				}
+			}
+
+			try {
+				System.out.println("Table employee for the updated tuples after the update:");
+				for (Object o : temp2) {
+					temp3 = new LinkedList<Object>();
+					temp3.add(o);
+					rs = qmaker.performQuery(q2, temp3);
+					// goes back
+					String fName, minit, lName, address, sex;
+					int ssn, sussn, dno;
+					float salary;
+					Date bdate;
+					while (rs.next()) {
+
+						fName = rs.getString("fname");
+						minit = rs.getString("minit");
+						lName = rs.getString("lname");
+						ssn = rs.getInt("ssn");
+						bdate = rs.getDate("bdate");
+						address = rs.getString("address");
+						sex = rs.getString("sex");
+						salary = rs.getFloat("salary");
+						sussn = rs.getInt("super_ssn");
+						dno = rs.getInt("dno");
+
+						// Display values
+						System.out.println("First name: " + fName + "	| Minit: " + minit + "	| Last name: " + lName
+								+ "	| Social security number: " + ssn + "	| Birth date: " + bdate + "	| Address: "
+								+ address + "	| Sex: " + sex + "	| Salary: " + salary
+								+ "	| Superior's social security number: " + sussn + "	| Department number: " + dno);
+					}
+					try {
+						qmaker.endQuery();
+					} catch (NoQueryToClose e) {
+						// nomatter
+					}
+				}
+			} catch (SQLException e) {
+				System.err.println("Fatal error with a query");
+			} finally {
+				System.out.println();
+				try {
+					qmaker.endQuery();
+				} catch (NoQueryToClose e) {
+					// don't care
+				}
+			}
+
+			try {
+				System.out.println("Table department for the updated tuples after the update:");
+				for (Object o : temp2) {
+					temp3 = new LinkedList<Object>();
+					temp3.add(o);
+					rs = qmaker.performQuery(q3, temp3);
+					// goes back
+					String dName;
+					int dNum, mSsn;
+					Date msDate;
+					while (rs.next()) {
+
+						dName = rs.getString("Dname");
+						dNum = rs.getInt("Dnumber");
+						mSsn = rs.getInt("Mgr_ssn");
+						msDate = rs.getDate("Mgr_start_date");
+						
+
+						// Display values
+						System.out.println("Department Name: " + dName + "	| Department Number: " + dNum
+								+ "	| Manager's Social Security Number: " + mSsn + "	| Manager's starting date: " + msDate);
+					}
+					try {
+						qmaker.endQuery();
+					} catch (NoQueryToClose e) {
+						// nomatter
+					}
+				}
+			} catch (SQLException e) {
+				System.err.println("Fatal error with a query");
+			} finally {
+				System.out.println();
+				try {
+					qmaker.endQuery();
+				} catch (NoQueryToClose e) {
+					// don't care
+				}
+			}
+
+			try {
+				System.out.println("Table dept_locations for the updated tuples after the update:");
+				for (Object o : temp2) {
+					temp3 = new LinkedList<Object>();
+					temp3.add(o);
+					rs = qmaker.performQuery(q4, temp3);
+
+					int dNum;
+					String dLoc;
+					while (rs.next()) {
+
+						dNum = rs.getInt("Dnumber");
+						dLoc = rs.getString("Dlocation");
+						
+
+						// Display values
+						System.out.println("Department Number: " + dNum + "	| Department Location: " + dLoc);
+					}
+					try {
+						qmaker.endQuery();
+					} catch (NoQueryToClose e) {
+						// nomatter
+					}
+				}
+			} catch (SQLException e) {
+				System.err.println("Fatal error with a query");
+			} finally {
+				System.out.println();
+				try {
+					qmaker.endQuery();
+				} catch (NoQueryToClose e) {
+					// don't care
+				}
+			} 
+			
+		} catch (IllegalQueryException e) {
+			System.err.println(e.getMessage());
+		} catch (AlreadyActiveQuery e) {
+			System.err.println(e.getMessage());
+		} finally {
+			try {
+				qmaker.endQuery();
+			} catch (NoQueryToClose e) {
+				// not important
+			}
+		}
+	}
+
+	
+	/**
+	 * method for the query of choice 9
+	 */
+	private static void processQ9(Scanner sc) {
+
+		String insert = "INSERT INTO `employee_customer` (`Emp_id`, `Cust_id`) VALUES (?, ?)";
+		boolean exit = false;
+		int n = 0;
+		LinkedList<Object> list = new LinkedList<Object>();
+		while (!exit) {
+			printNicely("Write down the number of employee_customer tuples you want to insert: \n");
+			try {
+				n = Integer.parseInt(sc.nextLine());
+				exit = true;
+			} catch (RuntimeException e) {
+				printNicely("Please, write down an integer number\n");
+			}
+		}
+		exit = false;
+		int emp = 12345;
+		int cust = 2000008;
+		
+
+		for (int i = 1; i <= n; i++) {
+			printNicely("tuple number " + i + ":\n");
+
+			while (!exit) {
+				printNicely("Write down social security number of tuple " + i + ": \n");
+				try {
+					emp = Integer.parseInt(sc.nextLine());
+					exit = true;
+				} catch (RuntimeException e) {
+					printNicely("Please, write down an integer number\n");
+				}
+			}
+			list.add(i * 2 - 2, emp);
+			exit = false;
+			while (!exit) {
+				printNicely("Write down the customer id of tuple " + i + ": \n");
+				try {
+					cust = Integer.parseInt(sc.nextLine());
+					exit = true;
+				} catch (RuntimeException e) {
+					printNicely("Please, write down an integer number\n");
+				}
+			}
+			list.add(i * 2 - 1, cust);
+			exit = false;
+			
+		}
+
+		try {
+
+			printNicely("This is the state of works_on table before the insertions:\n");
+			ResultSet rs = qmaker.performQuery("Select * from employee_customer");
+			int eId;
+			int cId;
+			try {
+				while (rs.next()) {
+
+					// Retrieve by column name
+					eId = rs.getInt("Emp_Id");
+					cId = rs.getInt("Cust_Id");
+
+					// Display values
+					System.out.println("Social security number: " + eId + "	| Customer ID: " + cId);
+
+				}
+
+			} catch (SQLException e) { // should not happen
+			} finally {
+
+				try {
+					qmaker.endQuery();
+				} catch (NoQueryToClose e) { // Should not happen
+
+				}
+
+			}
+
+			if (n == 1) {
+
+				System.out.println(qmaker.insertTypeQuery(insert, list) + "/1 successful query");
+
+			} else {
+				System.out.println(qmaker.insertTypeQuery(insert, list, n) + "/" + n + " successful queries");
+
+			}
+
+			try {
+				qmaker.endQuery();
+			} catch (NoQueryToClose e1) {
+				// should not happen
+			}
+
+			printNicely("This is the state of works_on table after the insertions:\n");
+			rs = qmaker.performQuery("Select * from employee_customer");
+
+			try {
+				while (rs.next()) {
+
+					// Retrieve by column name
+					eId = rs.getInt("Emp_Id");
+					cId = rs.getInt("Cust_Id");
+
+
+					// Display values
+					System.out.println("Social security number: " + eId + "	| Customer ID: " + cId);
+
+				}
+
+			} catch (SQLException e) {
+				// should not happen
+			} finally {
+
+				try {
+					qmaker.endQuery();
+				} catch (NoQueryToClose e) {
+					// Should not happen
+				}
+
+			}
+
+		} catch (IllegalQueryException e) {
+			System.err.println(e.getMessage());
+		} catch (AlreadyActiveQuery e) {
+			System.err.println(e.getMessage());
+		} finally {
+			try {
+				qmaker.endQuery();
+			} catch (NoQueryToClose e) {
+				// not important
+			}
+		}
+	}
+
+	
 	
 	/**
 	 * method for the query of choice 8
