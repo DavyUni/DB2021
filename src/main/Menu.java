@@ -82,13 +82,13 @@ public class Menu {
 			+ "|   type 7 to: Retrieve the name, location and number of     |\n"
 			+ "|   the projects with at least 3 teammates, but not exactly  |\n"
 			+ "|   4 in total, of which male teammates that only work on    |\n"
-			+ "|   that project, have gone on a optional excurison,         |\n"
+			+ "|   that project, have gone on an optional excursion,        |\n"
 			+ "|   did go to the city in which their project is located.    |\n"
 			+ "|   Also retrieve the city they went to.                     |\n"
 			+ "|                                                            |\n"
 			+ "|   type 8 to: Retrieve the name and city of restaurants     |\n"
 			+ "|   that have a supremely difficult dish (all other dishes   |\n"
-			+ "|   of that restaurant are at least 1 times easier than it)  |\n"
+			+ "|   of that restaurant are at least 1 time easier than it)   |\n"
 			+ "|   and that are located in cities where a spanish speaking  |\n"
 			+ "|   guide has made a trip to. Also fetch the highest sales   |\n"
 			+ "|   of those restaurants, on the day of departure of the     |\n"
@@ -107,7 +107,7 @@ public class Menu {
 			+ "|---Juyoung's queries section:-------------------------------|\n"
 			+ "|                                                            |\n"
 			+ "|   type 11 to: Retrieve the name and number of visitors of  |\n"
-			+ "|   the most visited restaureant in the city of Paris.       |\n"
+			+ "|   the most visited restaurant in the city of Paris.        |\n"
 			+ "|                                                            |\n"
 			+ "|   type 12 to: Retrieve the customer id, customer name and  |\n"
 			+ "|   trip information  of those  customers that  either have  |\n"
@@ -117,7 +117,7 @@ public class Menu {
 			+ "|                                                            |\n"
 			+ "|   type 13 to: Retrieve the employee social security number,|\n"
 			+ "|   name, surname, birthdate and guide's id and name of the  |\n"
-			+ "|   the youngest  employee that  has gone on a  trip with a  |\n"
+			+ "|   youngest  employee  that  has  gone on a  trip  with  a  |\n"
 			+ "|   guide that speaks spanish.                               |\n"
 			+ "|                                                            |\n"
 			+ "|   type 14 to: Insert into the database some new hotel_trip |\n"
@@ -1142,7 +1142,17 @@ public class Menu {
 	 * method for the query of choice 8
 	 */
 	private static void processQ8() {
-		String query = "SELECT r.restaurname, r.city, MAX(ss.amount) as amount FROM restaurant as r inner join serves as s on r.restaurname=s.restaurname inner join dishes as d on s.dish=d.dish inner join sales as ss on r.restaurname=ss.restaurname where r.city IN (Select tr.TripTo as city FROM trip as tr inner Join (SELECT t.GuideId From tourguide as t inner join languages as l on t.GuideId=l.GuideId where l.Lang='Spanish') as k on tr.GuideId=k.GuideId) and d.dish in (Select dd.dish from dishes as dd where not exists(select ddd.dish from dishes as ddd where ddd.difficulty>dd.difficulty)) and ss.dateOfSale IN (Select tr.DepartureDate as city FROM trip as tr inner Join (SELECT t.GuideId From tourguide as t inner join languages as l on t.GuideId=l.GuideId where l.Lang='Spanish') as k on tr.GuideId=k.GuideId) group by r.restaurname";
+		String query = "SELECT r.restaurname, r.city, MAX(ss.amount) as amount"
+				+ " FROM restaurant as r inner join serves as s on r.restaurname=s.restaurname "
+				+ "inner join dishes as d on s.dish=d.dish" + " inner join sales as ss on r.restaurname=ss.restaurname"
+				+ " where r.city IN" + " (" + "Select tr.TripTo as city " + "FROM trip as tr" + " inner Join ("
+				+ "SELECT t.GuideId" + " From tourguide as t inner join languages as l on t.GuideId=l.GuideId "
+				+ "where l.Lang='Spanish') as k on tr.GuideId=k.GuideId)" + " and" + " d.dish in " + "("
+				+ "Select dd.dish " + "from dishes as dd" + " where not exists(" + "select ddd.dish"
+				+ " from dishes as ddd" + " where ddd.difficulty>dd.difficulty))" + " and " + "ss.dateOfSale IN ("
+				+ "Select tr.DepartureDate as city " + "FROM trip as tr inner Join (" + "SELECT t.GuideId"
+				+ " From tourguide as t inner join languages as l on t.GuideId=l.GuideId" + " where l.Lang='Spanish')"
+				+ " as k on tr.GuideId=k.GuideId)" + " group by r.restaurname";
 
 		try {
 			ResultSet rs = qmaker.performQuery(query);
@@ -2538,7 +2548,7 @@ public class Menu {
 			System.out.print(s.charAt(i));
 			if (s.charAt(i) != ' ')
 				try {
-					Thread.sleep(4);
+					Thread.sleep(1);
 				} catch (InterruptedException e) {
 					//
 				}
